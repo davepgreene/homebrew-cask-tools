@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/bct/tasks'
+BrewCaskTools::Tasks::CLI.start(ARGV)
