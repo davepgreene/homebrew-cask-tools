@@ -4,6 +4,7 @@ require_relative './caskroom'
 require_relative './tasks/upgrade'
 require_relative './tasks/outdated'
 require_relative './tasks/cleanup'
+require_relative './metadata'
 
 module BrewCaskTools
   module Tasks
@@ -21,6 +22,7 @@ module BrewCaskTools
 
       desc 'version', 'display brew-cask-tools version'
       def version
+        say BrewCaskTools::VERSION, :green
       end
 
       desc 'outdated', 'list outdated casks'
