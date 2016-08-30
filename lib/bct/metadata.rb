@@ -1,11 +1,7 @@
-require_relative './util'
+require 'git-version-bump'
 
 # :nodoc:
 module BrewCaskTools
-  VERSION = begin
-              Util.source_path('VERSION').read
-            rescue
-              '0.0.1'
-            end
+  VERSION = GVB.version
   DESCRIPTION = 'A tiny tool that provides some missing functionality in Homebrew Cask.'.freeze
 end
