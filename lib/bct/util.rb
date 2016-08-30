@@ -19,11 +19,11 @@ module BrewCaskTools
       # Relative path from working directory
       ##
       def relative_path(*relative)
-        Pathname.pwd.join(*(relative.flatten.map(&:to_s))).expand_path
+        Pathname.pwd.join(*relative.flatten.map(&:to_s)).expand_path
       end
 
       def source_path(*relative)
-        GEM_PATH.join(*(relative.flatten.map(&:to_s))).expand_path
+        GEM_PATH.join(*relative.flatten.map(&:to_s)).expand_path
       end
     end
   end

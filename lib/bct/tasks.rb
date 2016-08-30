@@ -12,8 +12,8 @@ module BrewCaskTools
     class CLI < Thor
       def initialize(args, opts, config)
         super
-        @caskroom = Caskroom.new unless
-          %w(help version).include?(config[:current_command].name)
+        return if %w(help version).include?(config[:current_command].name)
+        `brew tap` # Update Caskroom tap so the latest formulae are pulled down
       end
 
       def self.exit_on_failure?
@@ -27,19 +27,19 @@ module BrewCaskTools
 
       desc 'outdated', 'list outdated casks'
       def outdated
-        invoke Tasks::Outdated, :outdated, [], [@caskroom]
+        Tasks::Outdated.new
       end
 
       desc 'upgrade CASK', 'Upgrade a specific cask.' \
       ' If a cask name is omitted, this task will update all outdated casks.'
       def upgrade(cask_name = nil)
-        invoke Tasks::Upgrade, :upgrade, [cask_name], [@caskroom]
+        Tasks::Upgrade.new(cask_name)
       end
 
       desc 'cleanup CASK', 'clean up old versions of a specific cask. If a ' \
       'cask name is omitted, this task will cleanup all outdated casks.'
       def cleanup(cask_name = nil)
-        invoke Tasks::Cleanup, :cleanup, [cask_name], [@caskroom]
+        Tasks::Cleanup.new(cask_name)
       end
     end
   end

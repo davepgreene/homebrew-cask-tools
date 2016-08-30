@@ -1,45 +1,52 @@
 require 'thor'
 
+require_relative './caskroom'
 require_relative './cleanup'
 
 module BrewCaskTools
   module Tasks
     # Upgrade tasks
-    class Upgrade < Thor
-      desc 'upgrade CASK', 'Upgrade a specific cask.' \
-      ' If a cask name is omitted, this task will update all outdated casks.'
-      def upgrade(cask_name, *args)
-        @caskroom = args.first
-        cask = @caskroom.get(cask_name) unless cask_name.nil?
+    class Upgrade < Caskroom
+      def initialize(cask_name)
+        super()
 
-        if cask.nil? && !cask_name.nil?
-          return say 'Invalid cask specified', :red
+        if cask_name.nil?
+          progressbar.total = caskroom.casks.length
+          progressbar.log "\nLooking for outdated casks..."
+
+          return upgrade_all # Clean all casks
         end
 
-        if cask_name.nil? # Upgrade everything
-          upgrade_all
-        else # Upgrade one cask
-          upgrade_one(cask_name, cask)
-        end
+        cask = caskroom.get(cask_name)
+        return say 'Invalid cask specified', :red if cask.nil?
+
+        upgrade_one(cask)
       end
 
-      no_tasks do
-        def upgrade_one(cask_name, cask)
-          cask.upgrade
-          invoke Tasks::Cleanup, :cleanup, [cask_name]
+      def upgrade_all
+        to_upgrade = []
+
+        caskroom.enumerate do |cask|
+          progressbar.title = "  #{cask.name.capitalize} "
+          progressbar.increment
+
+          next unless cask.outdated?
+
+          to_upgrade << cask
+          progressbar.log "#{cask.info.name}: " \
+          "#{cask.installed_version} ==> #{cask.current_version}"
         end
 
-        def upgrade_all
-          to_upgrade = @caskroom.casklist.select(&:outdated?)
+        return say 'There are no casks to be upgraded', :green if to_upgrade.empty?
 
-          if to_upgrade.empty?
-            say 'There are no casks to be upgraded', :green
-          else
-            to_upgrade.each(&:upgrade)
-          end
+        to_upgrade.each(&:upgrade)
 
-          invoke Tasks::Cleanup, :cleanup
-        end
+        Tasks::Cleanup.new(nil)
+      end
+
+      def upgrade_one(cask)
+        cask.upgrade
+        Tasks::Cleanup.new(cask_name)
       end
     end
   end
