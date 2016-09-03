@@ -13,7 +13,7 @@ module BrewCaskTools
       def initialize(args, opts, config)
         super
         return if %w(help version).include?(config[:current_command].name)
-        `brew tap` # Update Caskroom tap so the latest formulae are pulled down
+        `brew update` # Update Caskroom tap so the latest formulae are pulled down
       end
 
       def self.exit_on_failure?
