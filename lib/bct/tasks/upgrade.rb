@@ -46,7 +46,7 @@ module BrewCaskTools
 
       def upgrade_one(cask)
         cask.upgrade
-        Tasks::Cleanup.new(cask_name)
+        Tasks::Cleanup.new(cask.name)
       end
     end
   end

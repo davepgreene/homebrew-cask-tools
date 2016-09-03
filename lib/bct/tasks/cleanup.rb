@@ -12,7 +12,7 @@ module BrewCaskTools
 
         if cask_name.nil?
           progressbar.total = caskroom.casks.length
-          progressbar.log "\nLooking for outdated casks..."
+          progressbar.log "\nLooking for casks to cleanup..."
 
           return clean_all # Clean all casks
         end
