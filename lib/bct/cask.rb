@@ -1,7 +1,6 @@
 require 'fileutils'
 require 'thor'
 require 'open3'
-require 'pry'
 
 require_relative './cask/info'
 
@@ -11,7 +10,7 @@ DIR_BLACKLIST = ['.', '..', '.metadata'].freeze
 module BrewCaskTools
   # Cask control class. Implements operations on a single cask.
   class Cask < Thor::Shell::Basic
-    attr_reader :name, :dir
+    attr_reader :name, :dir, :info
 
     def initialize(name)
       super()
