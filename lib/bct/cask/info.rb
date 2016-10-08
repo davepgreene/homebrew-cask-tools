@@ -1,5 +1,3 @@
-require 'pry'
-
 module BrewCaskTools
   # Class to keep brittle parsing of `brew cask info #{cask}` localized.
   class Info
