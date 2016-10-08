@@ -27,6 +27,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'thor', '~> 0.19'
   spec.add_dependency 'ruby-progressbar', '~> 1.8'
-  spec.add_dependency 'git-version-bump', '~> 0.15'
   spec.add_dependency 'versionomy', '~> 0.5'
 end
