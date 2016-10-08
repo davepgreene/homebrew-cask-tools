@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
   spec.description   = BrewCaskTools::DESCRIPTION
   spec.homepage      = 'https://github.com/davepgreene/brew-cask-tools'
   spec.license       = 'MIT'
+  spec.required_ruby_version = '>= 2.1'
 
   spec.files         = Dir.glob('{bin,lib}/**/*') + %w(LICENSE.txt README.md)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
@@ -27,4 +28,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'thor', '~> 0.19'
   spec.add_dependency 'ruby-progressbar', '~> 1.8'
   spec.add_dependency 'git-version-bump', '~> 0.15'
+  spec.add_dependency 'versionomy', '~> 0.5'
 end
