@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'thor'
 require 'open3'
+require 'versionomy'
 
 require_relative './cask/info'
 
@@ -34,7 +35,12 @@ module BrewCaskTools
     end
 
     def current_version
-      @info.short_name.sub("#{@name}: ", '')
+      v = @info.short_name.sub("#{@name}: ", '')
+      begin
+        v == 'latest' ? v : Versionomy.parse(v)
+      rescue Versionomy::Errors::ParseError => e
+        v
+      end
     end
 
     def installed_version
@@ -44,13 +50,25 @@ module BrewCaskTools
     def local_versions
       Dir.entries(@dir)
          .reject { |i| DIR_BLACKLIST.include?(i) }
-         .sort
+         .map do |i|
+            begin
+              i == 'latest' ? i : Versionomy.parse(i)
+            rescue Versionomy::Errors::ParseError => e
+              i
+            end
+          end.sort
     end
 
     def local_metadata_versions
       Dir.entries(File.join(@dir, '.metadata'))
          .reject { |i| DIR_BLACKLIST.include?(i) }
-         .sort
+         .map do |i|
+            begin
+              i == 'latest' ? i : Versionomy.parse(i)
+            rescue Versionomy::Errors::ParseError => e
+              i
+            end
+          end.sort
     end
 
     def deprecated?
@@ -63,7 +81,11 @@ module BrewCaskTools
     end
 
     def outdated?
-      current_version != installed_version
+      if installed_version.to_s == 'latest'
+        return false
+      else
+        current_version > installed_version
+      end
     end
 
     def upgrade
@@ -114,11 +136,11 @@ module BrewCaskTools
     end
 
     def rm_version(version)
-      rm(File.join(@dir, version))
+      rm(File.join(@dir, version.to_s))
     end
 
     def rm_metadata(version)
-      rm(File.join(@dir, '.metadata', version))
+      rm(File.join(@dir, '.metadata', version.to_s))
     end
 
     def rm(dir)
