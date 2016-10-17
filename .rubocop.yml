@@ -1,1 +1,6 @@
 inherit_from: .rubocop_todo.yml
+
+# Disabling because Rubocop can't tell the difference between an
+# unfrozen string literal and a require or require_relative call.
+Style/FrozenStringLiteralComment:
+  Enabled: false
