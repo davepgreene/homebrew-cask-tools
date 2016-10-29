@@ -1,10 +1,8 @@
-require 'thor'
-
 require_relative './cask'
 
 module BrewCaskTools
   # Represents a list of Casks.
-  class Caskroom < Thor::Shell::Basic
+  class Caskroom
     def initialize
       super
     end
@@ -18,14 +16,12 @@ module BrewCaskTools
     end
 
     def enumerate
-      casklist do |c|
-        yield Cask.new(c)
-      end
+      casklist { |cask| yield Cask.new(cask) }
     end
 
     def get(cask_name)
-      c = casks.select { |e| e == cask_name }.first
-      Cask.new(c)
+      cask = casks.select { |name| name == cask_name }
+      cask.empty? ? nil : Cask.new(cask.first)
     end
   end
 end
