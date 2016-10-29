@@ -1,12 +1,12 @@
 require 'fileutils'
 require 'thor'
 require 'open3'
-require 'versionomy'
 
 require_relative './cask/info'
+require_relative './cask/versions'
 
+# Location of homebrew cask's caskroom
 CASKROOM = '/usr/local/Caskroom'.freeze
-DIR_BLACKLIST = ['.', '..', '.metadata'].freeze
 
 module BrewCaskTools
   # Cask control class. Implements operations on a single cask.
@@ -25,50 +25,33 @@ module BrewCaskTools
         info = `brew cask info #{name}`.split("\n")
       end
 
-      @info = Info.new(info)
-      @deprecated = deprecated?
+      @info = Casks::Info.new(info)
       @dir = File.join(CASKROOM, @name)
+      @versions = Casks::Versions.new(@dir, @info.short_name.sub("#{@name}: ", ''))
     end
 
-    def filter_info
-      @info.info.select! { |i| !i.end_with?('(does not exist)') }
+    def current
+      @versions.current
     end
 
-    def current_version
-      v = @info.short_name.sub("#{@name}: ", '')
-      begin
-        v == 'latest' ? v : Versionomy.parse(v)
-      rescue Versionomy::Errors::ParseError => e
-        v
-      end
+    def candidate
+      @versions.candidate
     end
 
-    def installed_version
-      local_versions.last
+    def versions
+      @versions.installed
     end
 
-    def local_versions
-      Dir.entries(@dir)
-         .reject { |i| DIR_BLACKLIST.include?(i) }
-         .map do |i|
-            begin
-              i == 'latest' ? i : Versionomy.parse(i)
-            rescue Versionomy::Errors::ParseError => e
-              i
-            end
-          end.sort
+    def old
+      @versions.old_installed
     end
 
-    def local_metadata_versions
-      Dir.entries(File.join(@dir, '.metadata'))
-         .reject { |i| DIR_BLACKLIST.include?(i) }
-         .map do |i|
-            begin
-              i == 'latest' ? i : Versionomy.parse(i)
-            rescue Versionomy::Errors::ParseError => e
-              i
-            end
-          end.sort
+    def metadata
+      @versions.metadata
+    end
+
+    def latest?
+      @versions.latest?
     end
 
     def deprecated?
@@ -76,75 +59,51 @@ module BrewCaskTools
     end
 
     def can_cleanup?
-      return true if @deprecated
-      (local_versions.length > 1 || local_metadata_versions.length > 1)
+      versions.length > 1 || metadata.length > 1
     end
 
     def outdated?
-      if installed_version.to_s == 'latest'
-        return false
-      else
-        current_version > installed_version
+      return false if latest?
+      candidate > current
+    end
+
+    def exec
+      Open3.popen2e("brew cask install #{@name} --force") do |_stdin, stdout_err, _wait_thr|
+        line = ''
+        while line
+          line = stdout_err.gets
+          puts line
+        end
       end
     end
 
     def upgrade
+      return say "#{@name} uses the `latest` convention. " \
+      'Homebrew cask does not upgrade casks marked as ' \
+      '`latest`. Use another method of determining if ' \
+      'this application has an upgrade', :green if latest?
+
       return say "You have the most recent version of #{@name}. " \
       'It cannot be upgraded', :green unless outdated?
 
-      say "Installing #{@name} (#{current_version})", :cyan
-      cmd = "brew cask install #{@name} --force"
-      Open3.popen2e(cmd) do |_stdin, stdout_err, _wait_thr|
-        while line = stdout_err.gets
-          puts line
-        end
-      end
-      say "Upgraded #{@name} to version #{current_version}", :green
-    end
-
-    def old_versions
-      old(local_versions)
-    end
-
-    def old_metadata
-      old(local_metadata_versions)
-    end
-
-    def old(arr)
-      _, *previous = arr.reverse
-      previous
+      say "Installing #{@name} (#{candidate})", :cyan
+      exec
+      say "Upgraded #{@name} to version #{candidate}", :green
     end
 
     def cleanup
       return unless can_cleanup?
-      if @deprecated == true
-        yield self, local_versions
+
+      if deprecated?
+        yield self, versions
         # Delete the whole cask
-        rm(@dir)
+        ::FileUtils.rm_rf(@dir, secure: true, verbose: true)
         return
       end
 
-      yield self, old_versions
-      rm_old(old_versions, method(:rm_version))
-      rm_old(old_metadata, method(:rm_metadata))
-    end
+      yield self, old
 
-    def rm_old(versions, method)
-      versions.each do |version|
-        method.call(version)
-      end
-    end
-
-    def rm_version(version)
-      rm(File.join(@dir, version.to_s))
-    end
-
-    def rm_metadata(version)
-      rm(File.join(@dir, '.metadata', version.to_s))
-    end
-
-    def rm(dir)
-      ::FileUtils.rm_rf(dir, secure: true, verbose: true)
+      @versions.rm_old
     end
   end
 end
