@@ -30,16 +30,16 @@ module BrewCaskTools
         Tasks::Outdated.new
       end
 
-      desc 'upgrade CASK', 'Upgrade a specific cask.' \
+      desc 'upgrade CASKS', 'Upgrade a specific cask.' \
       ' If a cask name is omitted, this task will update all outdated casks.'
-      def upgrade(cask_name = nil)
-        Tasks::Upgrade.new(cask_name)
+      def upgrade(*casks)
+        Tasks::Upgrade.new(casks)
       end
 
-      desc 'cleanup CASK', 'clean up old versions of a specific cask. If a ' \
+      desc 'cleanup CASKS', 'clean up old versions of a specific cask. If a ' \
       'cask name is omitted, this task will cleanup all outdated casks.'
-      def cleanup(cask_name = nil)
-        Tasks::Cleanup.new(cask_name)
+      def cleanup(*casks)
+        Tasks::Cleanup.new(casks)
       end
     end
   end
