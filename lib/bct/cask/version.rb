@@ -11,7 +11,7 @@ module BrewCaskTools
       end
 
       def versions
-        @versions ||= latest? ? ['latest'] : all_versions
+        @versions ||= latest? ? ['latest'] : all_versions.sort
       end
 
       def latest?
@@ -47,7 +47,7 @@ module BrewCaskTools
              if File.directory?(File.join(@dir, version))
                Version.parse_version(version)
              end
-           end.compact.sort
+           end.compact
       end
     end
   end
