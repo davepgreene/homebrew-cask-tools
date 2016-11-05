@@ -2,27 +2,28 @@ require_relative './caskroom'
 
 module BrewCaskTools
   module Tasks
-    # Outdated cask tasks
+    # Outdated cask task
     class Outdated < Caskroom
       def initialize
         super
         progressbar.total = caskroom.casks.length
         progressbar.log "\nLooking for outdated casks..."
-        @outdated = []
-        @deprecated = []
-        compile
+        @outdated, @deprecated = compile
 
         outdated
         deprecated
       end
 
       def compile
+        outdated = []
+        deprecated = []
         caskroom.enumerate do |cask|
           increment(cask)
 
-          @outdated << cask if cask.outdated?
-          @deprecated << cask if cask.deprecated?
+          outdated << cask if cask.outdated?
+          deprecated << cask if cask.deprecated?
         end
+        [outdated, deprecated]
       end
 
       def outdated

@@ -5,8 +5,9 @@ require_relative './cleanup'
 
 module BrewCaskTools
   module Tasks
-    # Upgrade tasks
+    # Upgrade task
     class Upgrade < Caskroom
+      # @param optional casks [Array] array of cask names to upgrade
       def initialize(casks)
         super()
 
@@ -16,7 +17,7 @@ module BrewCaskTools
           progressbar.total = caskroom.casks.length
           progressbar.log "\nLooking for outdated casks..."
 
-          compile
+          @upgrade = compile
         else
           @upgrade = casks.map { |c| caskroom.get(c) }
           return say 'Invalid cask(s) specified', :red if @upgrade.compact.empty?
@@ -25,18 +26,23 @@ module BrewCaskTools
         upgrade
       end
 
+      # Get list of casks to upgrade
+      # @return [Array] an array of casks to upgrade
       def compile
+        upgrade = []
         caskroom.enumerate do |cask|
           increment(cask)
 
           next unless cask.outdated?
 
-          @upgrade << cask
+          upgrade << cask
           progressbar.log "#{cask.info.name}: " \
-          "#{cask.installed_version} ==> #{cask.current_version}"
+          "#{cask.current} ==> #{cask.candidate}"
         end
+        upgrade
       end
 
+      # Upgrade casks
       def upgrade
         return say 'There are no casks to be upgraded', :green if @upgrade.empty?
         @upgrade.each(&:upgrade)

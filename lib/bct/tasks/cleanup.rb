@@ -4,8 +4,9 @@ require_relative './caskroom'
 
 module BrewCaskTools
   module Tasks
-    # Cleanup tasks
+    # Cleanup task
     class Cleanup < Caskroom
+      # @param optional casks [Array] array of cask names to cleanup
       def initialize(casks)
         super()
 
@@ -15,7 +16,7 @@ module BrewCaskTools
           progressbar.total = caskroom.casks.length
           progressbar.log "\nLooking for casks to cleanup..."
 
-          compile
+          @cleaned = compile
         else
           @cleaned = casks.map { |c| caskroom.get(c) }
           return say 'Invalid cask specified', :red if @cleaned.compact.empty?
@@ -24,11 +25,13 @@ module BrewCaskTools
       end
 
       def compile
+        cleaned = []
         caskroom.enumerate do |cask|
           increment(cask)
 
-          @cleaned << cask if cask.can_cleanup?
+          cleaned << cask if cask.can_cleanup?
         end
+        cleaned
       end
 
       def clean
