@@ -7,18 +7,21 @@ module BrewCaskTools
       super
     end
 
+    # An array of installed casks
+    # @return [Array]
     def casks
       @casks ||= `brew cask ls`.split("\n")
     end
 
-    def casklist
-      @casklist ||= casks.map { |cask| yield cask }
-    end
-
+    # @param [Proc]
     def enumerate
-      casklist { |cask| yield Cask.new(cask) }
+      casks.map do |cask|
+        yield Cask.new(cask)
+      end
     end
 
+    # @param cask_name [String]
+    # @return [BrewCaskTools::Cask]
     def get(cask_name)
       cask = casks.select { |name| name == cask_name }
       cask.empty? ? nil : Cask.new(cask.first)
